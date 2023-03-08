@@ -118,7 +118,7 @@ contract MyHackExtension is ISlashCustomPlugin, Ownable {
     function receivePayment(
         address receiveToken,
         uint256 amount,
-        string calldata paymentId,
+        bytes calldata paymentId,
         string calldata optional,
         bytes calldata /** reserved */
     ) external payable override {
@@ -127,8 +127,9 @@ contract MyHackExtension is ISlashCustomPlugin, Ownable {
         // 寄付対象のトークンでの支払いか判別
         if (isDonation(receiveToken)) {
             uint256 donationAmount = calcDonation(amount);
-            IERC20(receiveToken).universalTransferFromNoRefund(msg.sender, owner(), amount.sub(donationAmount));
-            IERC20(receiveToken).universalTransferFrom(msg.sender, donations[currentPhase].receiver, donationAmount);
+            IERC20(receiveToken).universalTransferFromSenderToThis(amount);
+            IERC20(receiveToken).universalTransfer(owner(), amount.sub(donationAmount));
+            IERC20(receiveToken).universalTransfer(donations[currentPhase].receiver, donationAmount);
             afterReceived(donationAmount);
         } else {
             IERC20(receiveToken).universalTransferFrom(msg.sender, owner(), amount);
